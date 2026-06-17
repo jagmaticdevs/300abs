@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="300 Abs">
+<meta name="theme-color" content="#A32D2D">
+<title>300 Abs Workout Tracker</title>
+<style>
+:root{
+  --r:#A32D2D;--rl:#FBEAEA;--rd:#7A1F1F;--rm:#8C2A2A;
+  --b:#185FA5;--bl:#E6F1FB;--bb:#B5D4F4;
+  --g:#639922;--gl:#EAF3DE;--gd:#27500A;
+  --bg:#fff;--bg2:#f5f5f2;--bg3:#eeede8;
+  --tx:#1a1a1a;--tx2:#666;--tx3:#999;
+  --br:rgba(0,0,0,0.12);--br2:rgba(0,0,0,0.22);
+  --rad:8px;--radl:12px;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
+    --tx:#f0f0ee;--tx2:#aaa;--tx3:#666;
+    --br:rgba(255,255,255,0.12);--br2:rgba(255,255,255,0.22);
+    --rl:#2e1414;--rd:#E89A9A;--rm:#D67F7F;
+    --bl:#0c1e35;--bb:#185FA5;
+    --gl:#1a2e0a;--gd:#97C459;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--tx);min-height:100vh;padding-bottom:calc(1rem + var(--safe-bot))}
+.container{max-width:720px;margin:0 auto;padding:0 1rem}
+
+#ios-banner{display:none;position:sticky;top:0;z-index:100;background:var(--r);color:#fff;padding:12px 16px;padding-top:calc(12px + var(--safe-top));flex-direction:column;gap:6px}
+#ios-banner.show{display:flex}
+.ios-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ios-title{font-size:14px;font-weight:600}
+.ios-sub{font-size:12px;opacity:.85;line-height:1.4}
+.ios-steps{font-size:12px;opacity:.9;line-height:1.6;background:rgba(0,0,0,0.15);border-radius:6px;padding:8px 10px;margin-top:2px}
+.ios-close{background:rgba(0,0,0,0.2);border:none;color:#fff;border-radius:99px;width:26px;height:26px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 0 1rem;flex-wrap:wrap;gap:12px}
+h1{font-size:20px;font-weight:700}
+.subtitle{font-size:13px;color:var(--tx2);margin-top:2px}
+.reset-btn{font-size:12px;padding:7px 14px;border:1px solid var(--br2);border-radius:var(--rad);background:var(--bg2);cursor:pointer;color:var(--tx2)}
+
+.tabbar{display:flex;gap:8px;margin-bottom:1.25rem;background:var(--bg2);border-radius:var(--radl);padding:4px}
+.tabbtn{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border-radius:var(--rad);cursor:pointer;color:var(--tx2);background:transparent;border:none}
+.tabbtn.active{background:var(--bg);color:var(--r);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+.setup-box{background:var(--bg);border:1px solid var(--br);border-radius:var(--radl);padding:16px;margin-bottom:1.25rem}
+.setup-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.setup-row:last-child{margin-bottom:0}
+.setup-label{font-size:14px;font-weight:600}
+.setup-sub{font-size:12px;color:var(--tx2);margin-top:1px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepbtn{width:32px;height:32px;border-radius:50%;border:1px solid var(--br2);background:var(--bg2);font-size:16px;cursor:pointer;color:var(--tx);display:flex;align-items:center;justify-content:center}
+.stepval{font-size:16px;font-weight:700;min-width:54px;text-align:center}
+.freq-pills{display:flex;gap:6px;flex-wrap:wrap}
+.fpill{padding:7px 12px;border-radius:99px;border:1px solid var(--br);background:var(--bg2);font-size:13px;cursor:pointer;color:var(--tx2)}
+.fpill.fsel{background:var(--bl);border-color:var(--b);color:var(--b);font-weight:600}
+.setup-save{width:100%;padding:11px;border-radius:var(--rad);border:none;background:var(--r);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--bg2);border-radius:var(--rad);padding:12px;text-align:center}
+.sn{font-size:20px;font-weight:700}
+.sl{font-size:10.5px;color:var(--tx2);margin-top:2px;line-height:1.3}
+.pw{background:var(--bg2);border-radius:99px;height:6px;margin-bottom:1.5rem;overflow:hidden}
+.pb{height:6px;border-radius:99px;background:var(--r);transition:width .3s}
+.sec-lbl{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+
+.week-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:1.25rem}
+.wb{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rad);padding:8px 4px;text-align:center;cursor:pointer;font-size:12px;color:var(--tx2)}
+.wb.active{border-color:var(--b);color:var(--b);background:var(--bl)}
+.wb.wdone{background:var(--gl);border-color:var(--g);color:var(--gd)}
+.wl{font-weight:700;font-size:13px;margin-bottom:3px}
+.pips{display:flex;justify-content:center;gap:3px;margin-top:4px;flex-wrap:wrap}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--br2)}
+.pip.done{background:var(--g)}
+
+.dtabs{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.dt{flex:1;min-width:60px;padding:10px;border:1px solid var(--br);border-radius:var(--rad);cursor:pointer;font-size:13px;text-align:center;background:var(--bg2);color:var(--tx2)}
+.dt.active{background:var(--bl);border-color:var(--b);color:var(--b);font-weight:700}
+.dt.ddone{background:var(--gl);border-color:var(--g);color:var(--gd)}
+
+.intro{background:var(--bg2);border-radius:var(--radl);padding:14px 16px;margin-bottom:1.25rem;font-size:13px;color:var(--tx2);line-height:1.55}
+.intro b{color:var(--tx)}
+
+.ex{background:var(--bg);border:1px solid var(--br);border-radius:var(--radl);margin-bottom:8px;overflow:hidden}
+.ex.edone{background:var(--rl);border-color:var(--r)}
+.exh{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.exicon{width:44px;height:44px;border-radius:var(--rad);background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.exicon svg{width:30px;height:30px}
+.exck{width:24px;height:24px;border-radius:50%;border:2px solid var(--br2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:var(--tx2);background:var(--bg)}
+.ex.edone .exck{background:var(--r);border-color:var(--r);color:#fff}
+.exb{flex:1;min-width:0}
+.exname{font-size:15px;font-weight:600}
+.ex.edone .exname{color:var(--rd)}
+.exdet{font-size:12px;color:var(--tx2);margin-top:2px}
+.ex.edone .exdet{color:var(--rm)}
+.exr{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.arr{font-size:18px;color:var(--tx3);transition:transform .2s;display:inline-block;line-height:1}
+.ex.open .arr{transform:rotate(180deg)}
+.panel{border-top:1px solid var(--br);padding:14px 16px}
+
+.bigicon{width:100%;background:var(--bg2);border-radius:var(--rad);padding:18px 0;margin-bottom:14px;display:flex;align-items:center;justify-content:center}
+.bigicon svg{width:110px;height:110px}
+
+.instrbox{background:var(--bg2);border-radius:var(--rad);padding:14px;margin-bottom:14px}
+.ititle{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.steps{list-style:none;padding:0}
+.steps li{font-size:13px;color:var(--tx);padding:5px 0 5px 26px;position:relative;line-height:1.55;border-bottom:1px solid var(--br)}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:attr(data-n);position:absolute;left:0;font-weight:700;color:var(--tx3);font-size:12px;top:6px}
+.tip{font-size:12px;color:var(--tx2);margin-top:10px;padding-top:10px;border-top:1px solid var(--br);font-style:italic;line-height:1.5}
+
+.bbar{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:var(--rad);padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--tx2);border:1px solid var(--br)}
+.bbar-txt{flex:1}
+.tbtn{display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--br2);border-radius:var(--rad);background:var(--bg2);cursor:pointer;font-size:12px;color:var(--tx)}
+.tbtn.tgo{background:var(--b);border-color:var(--b);color:#fff}
+
+.mkbtn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rad);border:1px solid var(--br2);background:var(--bg2);font-size:13px;cursor:pointer;color:var(--tx)}
+.mkbtn.mkon{background:var(--rl);border-color:var(--r);color:var(--rd)}
+
+.fin-btn{width:100%;padding:14px;border-radius:var(--radl);border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:1rem;margin-bottom:1rem}
+.fin-btn:disabled{background:var(--bg2);color:var(--tx3);cursor:default}
+
+.history-empty{text-align:center;padding:40px 20px;color:var(--tx2);font-size:13px;line-height:1.6}
+.hist-item{background:var(--bg);border:1px solid var(--br);border-radius:var(--radl);padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.hist-left{display:flex;flex-direction:column;gap:2px}
+.hist-date{font-size:14px;font-weight:600}
+.hist-meta{font-size:12px;color:var(--tx2)}
+.hist-badge{font-size:11px;padding:4px 10px;border-radius:99px;background:var(--gl);color:var(--gd);font-weight:600;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="ios-banner">
+  <div class="ios-row">
+    <div>
+      <div class="ios-title">Install on your home screen</div>
+      <div class="ios-sub">Get the full app experience on iPhone</div>
+    </div>
+    <button class="ios-close" onclick="dismissBanner()" aria-label="Close">&#10005;</button>
+  </div>
+  <div class="ios-steps">
+    1. Tap the <strong>Share</strong> button at the bottom of Safari<br>
+    2. Scroll down and tap <strong>"Add to Home Screen"</strong><br>
+    3. Tap <strong>"Add"</strong> &mdash; done!
+  </div>
+</div>
+
+<div class="container">
+  <div class="top-bar">
+    <div>
+      <h1>300 Abs Workout</h1>
+      <div class="subtitle">Beginner version</div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">&#8635; Reset</button>
+  </div>
+
+  <div class="tabbar">
+    <button class="tabbtn" id="tab-workout" onclick="setTab('workout')">Workout</button>
+    <button class="tabbtn" id="tab-history" onclick="setTab('history')">History</button>
+    <button class="tabbtn" id="tab-setup" onclick="setTab('setup')">Program</button>
+  </div>
+
+  <div id="VIEW"></div>
+</div>
+
+<script>
+const SK='abs300_v2';
+
+/* simple original line-art icons, not copied from any source */
+const ICONS = {
+  situp: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 46h48"/><circle cx="44" cy="20" r="5"/><path d="M40 24l-10 14"/><path d="M30 38c-4 2-8 1-8 1"/><path d="M40 24l10-8"/><path d="M30 38l8-4"/></svg>',
+  sidecrunch: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 50h52"/><circle cx="46" cy="24" r="5"/><path d="M42 28c-8 4-10 12-10 16"/><path d="M32 44c-6 2-12 0-12 0"/><path d="M42 28l6-2"/><path d="M42 28l2 8"/></svg>',
+  rtwist: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 50h36"/><circle cx="32" cy="14" r="5"/><path d="M32 19v18"/><path d="M32 37l-14 8"/><path d="M32 37l14-8"/><path d="M22 27l20 0"/></svg>',
+  scissor: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20h20"/><circle cx="32" cy="20" r="5"/><path d="M32 25v10"/><path d="M32 35l18-8"/><path d="M32 35l-18 14"/><path d="M32 35l18 14"/></svg>',
+  kneedrive: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="40" cy="14" r="5"/><path d="M40 19l-6 14"/><path d="M34 33l-18-2"/><path d="M34 33l8 12"/><path d="M42 45l8 4"/><path d="M16 31l-4 14"/></svg>',
+  wiper: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="20" r="5"/><path d="M14 25v16"/><path d="M14 41l-6 10"/><path d="M14 41l16 6"/><path d="M30 47l16-14"/><path d="M14 41l4-16"/></svg>'
+};
+const ICON_DEFAULT = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="16" r="6"/><path d="M32 22v18"/><path d="M32 30l-14 8"/><path d="M32 30l14 8"/><path d="M32 40l-10 14"/><path d="M32 40l10 14"/></svg>';
+
+const EX=[
+  {id:'situp', name:'Sit up reach ups', detail:'50 reps', brk:15, icon:'situp',
+   steps:['Lie on your back with knees bent, feet flat on the floor.','Reach both arms straight overhead, behind your head, to start.','Sit all the way up, driving your arms forward and reaching past your toes at the top.','Lower back down with control until your arms are overhead again.','Repeat for 50 reps, keeping the motion continuous.'],
+   tip:'The overhead reach extends the range of motion beyond a standard sit-up, working the upper abs harder through a longer arc.'},
+  {id:'sclL', name:'Side crunches to left', detail:'25 reps', brk:15, icon:'sidecrunch',
+   steps:['Lie on your back, knees bent, feet flat, hands lightly behind your head.','Rotate your ribcage and bring your right elbow/shoulder up and across toward your left knee.','Crunch up and across, squeezing the obliques on the left side.','Lower back down with control.','Repeat for 25 reps, keeping tension on the obliques throughout.'],
+   tip:'Focus on rotating from the ribcage, not just pulling with your neck or arms.'},
+  {id:'sclR', name:'Side crunches to right', detail:'25 reps', brk:15, icon:'sidecrunch',
+   steps:['Same setup as the left side: lie back, knees bent, hands behind head.','Rotate and bring your left elbow/shoulder up and across toward your right knee.','Crunch up and across, squeezing the obliques on the right side.','Lower back down with control.','Repeat for 25 reps on this side.'],
+   tip:'Keep the movement smooth and controlled — momentum reduces how much the obliques actually work.'},
+  {id:'rtwist', name:'Seated Russian twists', detail:'50 reps', brk:15, icon:'rtwist',
+   steps:['Sit on the floor with knees bent, feet either flat or lifted slightly for more difficulty.','Lean back slightly to engage your core, keep your chest up.','Clasp your hands together and rotate your torso to tap the floor on one side.','Rotate to the other side and tap down — that\'s 2 reps.','Continue alternating sides for 50 total reps.'],
+   tip:'Keep feet off the floor for a harder variation, or planted for an easier one — pick whichever lets you maintain good form.'},
+  {id:'scissor', name:'Hi/low scissor crosses', detail:'50 reps (hi & low)', brk:15, icon:'scissor',
+   steps:['Lie on your back, legs extended, lower back pressed into the floor.','Lift both legs and cross one over the other in a scissor motion at a higher angle, then switch.','Lower both legs toward the floor (without touching) and repeat the scissor crossing at a lower angle.','Alternate between the "hi" and "low" positions as you cross legs.','Continue for 50 total reps, keeping your lower back glued to the floor.'],
+   tip:'If your lower back arches off the floor, raise the height of your legs slightly until you find a position where your core stays engaged.'},
+  {id:'kneeR', name:'Leaning knee drives to right', detail:'25 reps', brk:15, icon:'kneedrive',
+   steps:['Sit leaning back slightly on your hands or forearms, knees bent, feet off the floor.','Drive your knees up and across toward your right shoulder.','Extend your legs back out with control after each drive.','Keep your core braced and torso leaning back throughout.','Repeat for 25 reps driving toward the right side.'],
+   tip:'The lean increases the demand on your lower abs and obliques compared to a straight knee tuck.'},
+  {id:'kneeL', name:'Leaning knee drives to left', detail:'25 reps', brk:15, icon:'kneedrive',
+   steps:['Same setup: lean back on hands or forearms, knees bent, feet off the floor.','Drive your knees up and across toward your left shoulder this time.','Extend legs back out with control after each rep.','Keep your core braced throughout the set.','Repeat for 25 reps driving toward the left side.'],
+   tip:'Try to match the same intensity and range of motion as the right side for balanced oblique development.'},
+  {id:'wiper', name:'Wiper planks', detail:'50 reps each side', brk:20, icon:'wiper',
+   steps:['Get into a forearm plank position with your body straight and core braced.','Keeping your upper body still, rotate your hips and swing your legs side to side like a windshield wiper.','Swing to one side, then back through center to the other side — that\'s the "wiping" motion.','Keep your forearms planted and shoulders stable as your hips rotate.','Perform 50 reps per side (total swings), keeping the core tight throughout.'],
+   tip:'This is the toughest move in the set — it hits the entire core including deep stabilizers. Slow the pace down if your hips start to sag.'}
+];
+
+let state = { program:null, sessions:{}, history:[] };
+let curWeek=1, curDay=0, openEx=null, currentTab='workout';
+const brkT={};
+
+function load(){
+  try{
+    const s=localStorage.getItem(SK);
+    if(s){
+      const parsed=JSON.parse(s);
+      state = Object.assign({program:null,sessions:{},history:[]}, parsed);
+    }
+  }catch(e){}
+}
+function save(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}}
+
+function hasProgram(){return !!state.program;}
+function dayKey(w,d){return 'w'+w+'d'+d;}
+function dayState(w,d){
+  const k=dayKey(w,d);
+  if(!state.sessions[k])state.sessions[k]={};
+  return state.sessions[k];
+}
+function exDone(w,d,id){return !!(dayState(w,d)[id]&&dayState(w,d)[id].done);}
+function dayAllDone(w,d){return EX.every(e=>exDone(w,d,e.id));}
+
+function programWeeks(){return state.program?state.program.weeks:12;}
+function programFreq(){return state.program?state.program.freq:3;}
+function dayLabels(){
+  const f=programFreq();
+  const labels=['Day A','Day B','Day C','Day D','Day E','Day F','Day G'];
+  return labels.slice(0,f);
+}
+
+function totalSessionsTarget(){return programWeeks()*programFreq();}
+function totalSessionsDone(){
+  let t=0;
+  for(let w=1;w<=programWeeks();w++)
+    for(let d=0;d<programFreq();d++)
+      if(dayAllDone(w,d))t++;
+  return t;
+}
+function totalWeeksDone(){
+  let t=0;
+  const f=programFreq();
+  for(let w=1;w<=programWeeks();w++){
+    let allD=true;
+    for(let d=0;d<f;d++) if(!dayAllDone(w,d)) allD=false;
+    if(allD) t++;
+  }
+  return t;
+}
+function weekProgress(w){
+  let c=0;
+  for(let d=0;d<programFreq();d++) if(dayAllDone(w,d)) c++;
+  return c;
+}
+
+function fmt(s){const m=Math.floor(s/60);const ss=s%60;return m>0?m+':'+String(ss).padStart(2,'0'):s+'s';}
+function clrB(id){if(brkT[id]){clearInterval(brkT[id]);delete brkT[id];}}
+
+window.startB=function(exId,sec){
+  clrB(exId);
+  let rem=sec;
+  function tick(){
+    const el=document.getElementById('brk_'+exId);
+    if(!el){clrB(exId);return;}
+    el.textContent=rem>0?'Rest: '+fmt(rem):'Rest done — go!';
+    if(rem<=0){clrB(exId);return;}
+    rem--;
+  }
+  tick();
+  brkT[exId]=setInterval(tick,1000);
+};
+
+window.togEx=function(exId){
+  const d=dayState(curWeek,curDay);
+  if(!d[exId])d[exId]={done:false};
+  const wasAllDone = dayAllDone(curWeek,curDay);
+  d[exId].done=!d[exId].done;
+  const isAllDoneNow = dayAllDone(curWeek,curDay);
+  if(!wasAllDone && isAllDoneNow){
+    logCompletion();
+  }
+  save();renderView();
+};
+
+function logCompletion(){
+  const entry={
+    date:new Date().toISOString(),
+    week:curWeek,
+    day:curDay,
+    dayLabel:dayLabels()[curDay]||('Day '+(curDay+1))
+  };
+  state.history.unshift(entry);
+  save();
+}
+
+window.togOpen=function(exId){openEx=openEx===exId?null:exId;renderWA();};
+
+window.setTab=function(t){
+  currentTab=t;
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  renderView();
+};
+
+let tempWeeks = 4, tempFreq = 3;
+
+function renderSetup(){
+  if(state.program){tempWeeks=state.program.weeks;tempFreq=state.program.freq;}
+  const v=document.getElementById('VIEW');
+  v.innerHTML =
+    '<div class="setup-box">'
+    +'<div class="setup-row"><div><div class="setup-label">Program length</div><div class="setup-sub">How many weeks to run this program</div></div>'
+    +'<div class="stepper"><button class="stepbtn" onclick="adjWeeks(-1)">&minus;</button><div class="stepval" id="weeksVal">'+tempWeeks+' wks</div><button class="stepbtn" onclick="adjWeeks(1)">+</button></div></div>'
+    +'<div class="setup-row"><div><div class="setup-label">Frequency per week</div><div class="setup-sub">How many sessions each week</div></div>'
+    +'<div class="freq-pills" id="freqPills">'+[1,2,3,4,5,6,7].map(function(n){return '<button class="fpill '+(n===tempFreq?'fsel':'')+'" onclick="setFreq('+n+')">'+n+'x</button>';}).join('')+'</div></div>'
+    +'<button class="setup-save" onclick="saveProgram()">'+(state.program?'Update program':'Start program')+'</button>'
+    +'</div>'
+    +'<div class="intro"><b>The challenge:</b> work through all 300 reps each session with the best form you can hold, keeping rest to a minimum. Set your program length and weekly frequency above, then track every session in the Workout tab.</div>';
+}
+window.adjWeeks=function(delta){
+  tempWeeks=Math.max(1,Math.min(24,tempWeeks+delta));
+  document.getElementById('weeksVal').textContent=tempWeeks+' wks';
+};
+window.setFreq=function(n){
+  tempFreq=n;
+  document.querySelectorAll('.fpill').forEach(function(el,i){
+    el.classList.toggle('fsel', (i+1)===n);
+  });
+};
+window.saveProgram=function(){
+  state.program={weeks:tempWeeks, freq:tempFreq};
+  if(curWeek>tempWeeks) curWeek=1;
+  if(curDay>=tempFreq) curDay=0;
+  save();
+  setTab('workout');
+};
+
+function renderStats(){
+  const sess=totalSessionsDone();
+  const target=totalSessionsTarget();
+  const pct=target>0?Math.round((sess/target)*100):0;
+  return '<div class="stats">'
+    +'<div class="stat"><div class="sn">'+sess+'</div><div class="sl">Sessions done</div></div>'
+    +'<div class="stat"><div class="sn">'+Math.max(target-sess,0)+'</div><div class="sl">Left</div></div>'
+    +'<div class="stat"><div class="sn">'+totalWeeksDone()+'</div><div class="sl">Weeks complete</div></div>'
+    +'<div class="stat"><div class="sn">'+pct+'%</div><div class="sl">Progress</div></div>'
+    +'</div><div class="pw"><div class="pb" style="width:'+pct+'%"></div></div>';
+}
+
+function renderWeekGrid(){
+  const weeks=programWeeks();
+  let h='<div class="sec-lbl">Select week</div><div class="week-grid">';
+  for(let w=1;w<=weeks;w++){
+    const prog=weekProgress(w), isDone=prog===programFreq(), isActive=w===curWeek;
+    h+='<div class="wb '+(isActive?'active':'')+' '+(isDone&&!isActive?'wdone':'')+'" onclick="selectWeek('+w+')">'
+      +'<div class="wl">Wk '+w+'</div>'
+      +'<div class="pips">'+Array.from({length:programFreq()},function(_,d){return '<div class="pip '+(dayAllDone(w,d)?'done':'')+'"></div>';}).join('')+'</div>'
+      +'</div>';
+  }
+  h+='</div>';
+  return h;
+}
+window.selectWeek=function(w){curWeek=w;curDay=0;openEx=null;renderView();};
+
+function renderDayTabs(){
+  const labels=dayLabels();
+  let h='<div class="dtabs">';
+  labels.forEach(function(label,i){
+    const done=dayAllDone(curWeek,i);
+    h+='<div class="dt '+(i===curDay?'active':'')+' '+(done&&i!==curDay?'ddone':'')+'" onclick="selectDay('+i+')">'+label+(done?' &#10003;':'')+'</div>';
+  });
+  h+='</div>';
+  return h;
+}
+window.selectDay=function(i){curDay=i;openEx=null;renderWA();renderTopStats();};
+
+function renderTopStats(){
+  const wrap = document.getElementById('statsWeekWrap');
+  if(wrap) wrap.innerHTML = renderStats()+renderWeekGrid()+renderDayTabs();
+}
+
+function buildPanel(ex){
+  const done=exDone(curWeek,curDay,ex.id);
+  const iconSvg = ICONS[ex.icon] || ICON_DEFAULT;
+  let h='<div class="panel">';
+  h+='<div class="bigicon" style="color:var(--r)">'+iconSvg+'</div>';
+  h+='<div class="instrbox"><div class="ititle">How to do it</div><ol class="steps">';
+  ex.steps.forEach(function(s,i){h+='<li data-n="'+(i+1)+'">'+s+'</li>';});
+  h+='</ol>';
+  if(ex.tip)h+='<div class="tip">'+ex.tip+'</div>';
+  h+='</div>';
+  h+='<div class="bbar"><span class="bbar-txt" id="brk_'+ex.id+'">Optional '+ex.brk+'s rest if needed</span>';
+  h+='<button class="tbtn tgo" onclick="startB(\''+ex.id+'\','+ex.brk+')">Start rest</button></div>';
+  h+='<button class="mkbtn '+(done?'mkon':'')+'" onclick="togEx(\''+ex.id+'\')">'+(done?'Mark incomplete':'Mark complete')+'</button>';
+  h+='</div>';
+  return h;
+}
+
+function renderWA(){
+  const area=document.getElementById('WA');
+  if(!area)return;
+  area.innerHTML='';
+  EX.forEach(function(ex,idx){
+    const done=exDone(curWeek,curDay,ex.id);
+    const isOpen=openEx===ex.id;
+    const iconSvg = ICONS[ex.icon] || ICON_DEFAULT;
+    const div=document.createElement('div');
+    div.className='ex'+(done?' edone':'')+(isOpen?' open':'');
+    div.innerHTML='<div class="exh" onclick="togOpen(\''+ex.id+'\')">'
+      +'<div class="exicon" style="color:var(--r)">'+iconSvg+'</div>'
+      +'<div class="exb"><div class="exname">'+ex.name+'</div><div class="exdet">'+ex.detail+'</div></div>'
+      +'<div class="exr"><div class="exck">'+(done?'&#10003;':(idx+1))+'</div>'
+      +'<span class="arr">&#8964;</span></div>'
+      +'</div>'
+      +(isOpen?buildPanel(ex):'');
+    area.appendChild(div);
+  });
+  const all=dayAllDone(curWeek,curDay);
+  const btn=document.createElement('button');
+  btn.className='fin-btn';btn.disabled=!all;
+  btn.textContent=all?'Session complete — 300 reps down!':'Complete all 8 moves to finish';
+  area.appendChild(btn);
+}
+
+function renderWorkoutView(){
+  const v=document.getElementById('VIEW');
+  if(!hasProgram()){
+    v.innerHTML = '<div class="intro"><b>No program set up yet.</b> Head to the "Program" tab to choose your length in weeks and sessions per week, then come back here to start training.</div>';
+    return;
+  }
+  v.innerHTML = '<div id="statsWeekWrap">'+renderStats()+renderWeekGrid()+renderDayTabs()+'</div>'
+    +'<div class="sec-lbl" style="margin-top:1rem">Exercises</div><div id="WA"></div>';
+  renderWA();
+}
+
+function renderHistory(){
+  const v=document.getElementById('VIEW');
+  if(!state.history || state.history.length===0){
+    v.innerHTML = '<div class="history-empty">No completed sessions yet.<br>Finish a workout and it will show up here.</div>';
+    return;
+  }
+  let h='<div class="sec-lbl">Completed sessions</div>';
+  state.history.forEach(function(entry){
+    const d = new Date(entry.date);
+    const dateStr = d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    const timeStr = d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    h+='<div class="hist-item"><div class="hist-left"><div class="hist-date">'+dateStr+'</div>'
+      +'<div class="hist-meta">Week '+entry.week+' &middot; '+entry.dayLabel+' &middot; '+timeStr+'</div></div>'
+      +'<div class="hist-badge">300 reps</div></div>';
+  });
+  v.innerHTML=h;
+}
+
+function renderView(){
+  if(currentTab==='setup') renderSetup();
+  else if(currentTab==='history') renderHistory();
+  else renderWorkoutView();
+}
+
+function isIOS(){return/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;}
+function isStandalone(){return window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;}
+function showBanner(){
+  if(isIOS()&&!isStandalone()&&!localStorage.getItem('abs300_banner_dismissed')){
+    document.getElementById('ios-banner').classList.add('show');
+  }
+}
+window.dismissBanner=function(){
+  document.getElementById('ios-banner').classList.remove('show');
+  localStorage.setItem('abs300_banner_dismissed','1');
+};
+
+window.resetAll=function(){
+  if(!confirm('Reset ALL progress and program settings? This cannot be undone.'))return;
+  state={program:null, sessions:{}, history:[]};
+  save();curWeek=1;curDay=0;openEx=null;
+  Object.keys(brkT).forEach(function(id){clrB(id);});
+  setTab(hasProgram()?'workout':'setup');
+};
+
+load();
+document.getElementById('tab-workout').classList.add('active');
+if(!hasProgram()){
+  currentTab='setup';
+  document.getElementById('tab-workout').classList.remove('active');
+  document.getElementById('tab-setup').classList.add('active');
+}
+renderView();
+showBanner();
+</script>
+</body>
+</html>
